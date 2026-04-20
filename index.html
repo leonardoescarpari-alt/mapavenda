@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estratégia de Call — Mentoria Plano de Aprovação</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #22222e;
+    --gold: #c9a84c;
+    --gold-dim: #7d6330;
+    --red: #e04040;
+    --green: #3dbc78;
+    --blue: #5b8dee;
+    --text: #e8e8f0;
+    --muted: #888899;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; line-height: 1.65; }
+
+  .hero { background: linear-gradient(135deg, #0d0d14 0%, #131320 50%, #0a0a10 100%); border-bottom: 1px solid var(--border); padding: 52px 48px 40px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 380px; height: 380px; background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%); pointer-events: none; }
+  .hero-tag { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-tag::before { content: ''; display: inline-block; width: 24px; height: 1px; background: var(--gold); }
+  .hero h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 5vw, 64px); letter-spacing: 2px; line-height: 1; color: #fff; margin-bottom: 12px; }
+  .hero h1 span { color: var(--gold); }
+  .hero-sub { color: var(--muted); font-size: 17px; max-width: 600px; }
+
+  .tabs-wrapper { position: sticky; top: 0; z-index: 100; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 48px; display: flex; gap: 0; overflow-x: auto; }
+  .tab-btn { padding: 18px 24px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: none; color: var(--muted); font-family: 'DM Sans', sans-serif; letter-spacing: 0.5px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .content { max-width: 1100px; margin: 0 auto; padding: 48px 48px 80px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--gold); margin-bottom: 8px; }
+  .section-desc { color: var(--muted); font-size: 16px; margin-bottom: 36px; max-width: 680px; }
+
+  /* MAPA COMPLETO */
+  .page-map { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 40px; }
+  .map-item { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; display: flex; gap: 10px; align-items: flex-start; }
+  .map-item.highlight { border-color: var(--gold-dim); background: rgba(201,168,76,0.05); }
+  .map-item.skip { opacity: 0.35; }
+  .map-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); font-weight: 500; flex-shrink: 0; margin-top: 2px; min-width: 24px; }
+  .map-label { font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .map-item.highlight .map-label { color: var(--text); }
+
+  /* PIPELINE */
+  .pipeline { display: flex; flex-direction: column; gap: 0; }
+  .stage { display: grid; grid-template-columns: 64px 1fr; gap: 0 24px; position: relative; }
+  .stage:not(:last-child)::after { content: ''; position: absolute; left: 31px; top: 56px; bottom: 0; width: 2px; background: var(--border); }
+  .stage-num { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; flex-shrink: 0; position: relative; z-index: 1; margin-top: 6px; border: 2px solid var(--border); background: var(--card); color: var(--muted); }
+  .stage-num.gold { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
+  .stage-num.red { border-color: var(--red); color: var(--red); background: rgba(224,64,64,0.08); }
+  .stage-num.green { border-color: var(--green); color: var(--green); background: rgba(61,188,120,0.08); }
+  .stage-num.blue { border-color: var(--blue); color: var(--blue); background: rgba(91,141,238,0.08); }
+  .stage-body { padding-bottom: 32px; }
+  .stage-label { font-size: 12px; font-family: 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; margin-top: 8px; }
+  .stage-label.gold { color: var(--gold); }
+  .stage-label.red { color: var(--red); }
+  .stage-label.green { color: var(--green); }
+  .stage-label.blue { color: var(--blue); }
+  .stage-title { font-size: 19px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+  .pages-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .page-chip { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .page-chip .pn { font-weight: 500; color: var(--text); }
+  .page-chip.star { border-color: var(--gold-dim); background: rgba(201,168,76,0.06); }
+  .page-chip.star .pn { color: var(--gold); }
+  .stage-tip { background: rgba(201,168,76,0.04); border-left: 2px solid var(--gold-dim); padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 15px; color: var(--muted); margin-top: 10px; }
+  .stage-tip strong { color: var(--text); }
+  .stage-tip.red { background: rgba(224,64,64,0.04); border-left-color: var(--red); }
+  .stage-tip.green { background: rgba(61,188,120,0.04); border-left-color: var(--green); }
+  .stage-tip.blue { background: rgba(91,141,238,0.04); border-left-color: var(--blue); }
+
+  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 36px; }
+  @media (max-width: 700px) { .diff-grid { grid-template-columns: 1fr; } }
+  .diff-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
+  .diff-card-tag { font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .diff-card-tag.red { color: var(--red); }
+  .diff-card-tag.blue { color: var(--blue); }
+  .diff-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .diff-card ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .diff-card li { font-size: 15px; color: var(--muted); display: flex; align-items: flex-start; gap: 8px; }
+  .diff-card li::before { content: '→'; flex-shrink: 0; margin-top: 1px; }
+  .diff-card.red li::before { color: var(--red); }
+  .diff-card.blue li::before { color: var(--blue); }
+
+  .objection-list { display: flex; flex-direction: column; gap: 16px; }
+  .obj-item { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .obj-q { padding: 14px 18px; font-weight: 600; font-size: 16px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-start; }
+  .obj-q::before { content: '?'; font-family: 'Bebas Neue'; font-size: 18px; color: var(--gold); flex-shrink: 0; line-height: 1.2; }
+  .obj-a { padding: 14px 18px; font-size: 15px; color: var(--muted); line-height: 1.7; }
+  .obj-a strong { color: var(--text); }
+
+  .price-box { background: var(--card); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 28px 32px; margin-bottom: 24px; }
+  .price-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .price-row:last-child { border-bottom: none; }
+  .price-row .label { color: var(--muted); }
+  .price-row .val { font-family: 'DM Mono', monospace; color: var(--text); font-size: 12px; }
+  .price-total { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--gold-dim); }
+  .price-total .tlabel { font-weight: 600; font-size: 17px; }
+  .price-total .tval { font-family: 'Bebas Neue'; font-size: 28px; color: var(--gold); letter-spacing: 1px; }
+
+  .summary-strip { background: linear-gradient(90deg, rgba(201,168,76,0.08), rgba(201,168,76,0.02)); border: 1px solid var(--gold-dim); border-radius: 8px; padding: 20px 24px; margin-bottom: 40px; display: flex; align-items: center; gap: 16px; }
+  .summary-icon { font-family: 'Bebas Neue'; font-size: 36px; color: var(--gold); line-height: 1; flex-shrink: 0; }
+  .summary-text { font-size: 14px; color: var(--muted); }
+  .summary-text strong { color: var(--gold); }
+
+  .alert { background: rgba(224,64,64,0.06); border: 1px solid rgba(224,64,64,0.3); border-radius: 6px; padding: 12px 16px; font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .alert strong { color: var(--red); }
+  .tip-block { background: rgba(61,188,120,0.05); border: 1px solid rgba(61,188,120,0.2); border-radius: 6px; padding: 12px 16px; font-size: 13px; color: var(--muted); margin-top: 12px; }
+  .tip-block strong { color: var(--green); }
+
+  .nepq-block { margin-top: 14px; border: 1px solid #1e1e2e; border-radius: 8px; overflow: hidden; }
+  .nepq-header { background: #13131f; padding: 8px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #1e1e2e; }
+  .nepq-badge { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .nepq-badge.conexao    { background: rgba(91,141,238,0.15);  color: #5b8dee; border: 1px solid rgba(91,141,238,0.3);  }
+  .nepq-badge.situacao   { background: rgba(201,168,76,0.12);  color: #c9a84c; border: 1px solid rgba(201,168,76,0.3);  }
+  .nepq-badge.problema   { background: rgba(224,64,64,0.12);   color: #e04040; border: 1px solid rgba(224,64,64,0.3);   }
+  .nepq-badge.consequencia{ background: rgba(224,140,40,0.12); color: #e08c28; border: 1px solid rgba(224,140,40,0.3); }
+  .nepq-badge.solucao    { background: rgba(61,188,120,0.12);  color: #3dbc78; border: 1px solid rgba(61,188,120,0.3);  }
+  .nepq-badge.compromisso{ background: rgba(180,100,240,0.12); color: #b464f0; border: 1px solid rgba(180,100,240,0.3);}
+  .nepq-badge.qualificacao{ background: rgba(100,180,240,0.12);color: #64b4f0; border: 1px solid rgba(100,180,240,0.3);}
+  .nepq-title { font-size: 11px; color: #555570; font-family: 'DM Mono', monospace; }
+  .nepq-questions { padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; background: #0e0e18; }
+  .nepq-q { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: #c8c8d8; line-height: 1.55; padding: 8px 12px; background: #13131f; border-radius: 6px; border-left: 2px solid transparent; }
+  .nepq-q.conexao     { border-left-color: #5b8dee; }
+  .nepq-q.situacao    { border-left-color: #c9a84c; }
+  .nepq-q.problema    { border-left-color: #e04040; }
+  .nepq-q.consequencia{ border-left-color: #e08c28; }
+  .nepq-q.solucao     { border-left-color: #3dbc78; }
+  .nepq-q.compromisso { border-left-color: #b464f0; }
+  .nepq-q.qualificacao{ border-left-color: #64b4f0; }
+  .nepq-q-num { font-family: 'DM Mono', monospace; font-size: 10px; color: #444460; flex-shrink: 0; margin-top: 2px; min-width: 20px; }
+  .nepq-note { font-size: 13px; color: #555568; padding: 8px 14px 10px; font-style: italic; background: #0e0e18; border-top: 1px solid #1e1e2e; }
+
+  hr.div { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+  @media(max-width:700px){ .hero, .content, .tabs-wrapper { padding-left: 20px; padding-right: 20px; } .hero { padding-top: 32px; padding-bottom: 28px; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">Estratégia de Vendas — Mapeamento 100% Verificado</div>
+  <h1>ROTEIRO DE CALL<br><span>MENTORIA PLANO DE APROVAÇÃO</span></h1>
+  <p class="hero-sub">Sequência de páginas verificada visualmente página a página. Números corrigidos e validados no PDF original.</p>
+</div>
+
+<div class="tabs-wrapper">
+  <button class="tab-btn active" data-tab="mapa">Mapa Completo</button>
+  <button class="tab-btn" data-tab="geral">Roteiro Base</button>
+  <button class="tab-btn" data-tab="tipo1">Lead Tipo 1 — Já Estuda</button>
+  <button class="tab-btn" data-tab="tipo2">Lead Tipo 2 — Iniciante</button>
+  <button class="tab-btn" data-tab="objecoes">Objeções &amp; Fechamento</button>
+</div>
+
+<div class="content">
+
+<!-- ======= ABA: MAPA COMPLETO ======= -->
+<div id="tab-mapa" class="tab-panel active">
+  <p class="section-title">MAPA COMPLETO — 57 PÁGINAS</p>
+  <p class="section-desc">Todas as páginas verificadas visualmente. <span style="color:var(--gold)">Destacadas em dourado</span> = páginas que entram no roteiro de call. Páginas sem destaque = pular.</p>
+
+  <div class="page-map">
+    <div class="map-item skip"><span class="map-num">01</span><span class="map-label">Logo IPAA — capa inicial</span></div>
+    <div class="map-item highlight"><span class="map-num">02</span><span class="map-label">Capa da Mentoria com foto do Thiago</span></div>
+    <div class="map-item skip"><span class="map-num">03</span><span class="map-label">Missão do Instituto</span></div>
+    <div class="map-item highlight"><span class="map-num">04</span><span class="map-label">Bio Thiago Pacheco</span></div>
+    <div class="map-item highlight"><span class="map-num">05</span><span class="map-label">Cenário dos Concursos Hoje</span></div>
+    <div class="map-item skip"><span class="map-num">06</span><span class="map-label">Solução — Controle e Previsibilidade</span></div>
+    <div class="map-item skip"><span class="map-num">07</span><span class="map-label">Você vai errar menos (intro)</span></div>
+    <div class="map-item highlight"><span class="map-num">08</span><span class="map-label">80% repetem o mesmo erro 3x</span></div>
+    <div class="map-item highlight"><span class="map-num">09</span><span class="map-label">Não é coincidência. É padrão.</span></div>
+    <div class="map-item highlight"><span class="map-num">10</span><span class="map-label">Riscos de Fazer Sozinho</span></div>
+    <div class="map-item highlight"><span class="map-num">11</span><span class="map-label">O que você vai ter (6 benefícios)</span></div>
+    <div class="map-item skip"><span class="map-num">12</span><span class="map-label">Novos Aprovados</span></div>
+    <div class="map-item highlight"><span class="map-num">13</span><span class="map-label">Sistema 3 Fases (simples)</span></div>
+    <div class="map-item highlight"><span class="map-num">14</span><span class="map-label">Sistema 3 Fases (detalhado com IA)</span></div>
+    <div class="map-item highlight"><span class="map-num">15</span><span class="map-label">Scanner — 8 Alavancas (radar)</span></div>
+    <div class="map-item skip"><span class="map-num">16</span><span class="map-label">Fase 1 Scanner — explicação</span></div>
+    <div class="map-item skip"><span class="map-num">17</span><span class="map-label">01. Scanner com IA + gráfico</span></div>
+    <div class="map-item skip"><span class="map-num">18</span><span class="map-label">Fase 2 — Estratégia</span></div>
+    <div class="map-item skip"><span class="map-num">19</span><span class="map-label">Fase 3 — Execução</span></div>
+    <div class="map-item highlight"><span class="map-num">20</span><span class="map-label">O que é a Mentoria</span></div>
+    <div class="map-item highlight"><span class="map-num">21</span><span class="map-label">Não é curso, é sistema</span></div>
+    <div class="map-item highlight"><span class="map-num">22</span><span class="map-label">01. Scanner Erros com IA</span></div>
+    <div class="map-item highlight"><span class="map-num">23</span><span class="map-label">02. Diagnóstico 48h (individual)</span></div>
+    <div class="map-item highlight"><span class="map-num">24</span><span class="map-label">03. Priorização por Banca</span></div>
+    <div class="map-item highlight"><span class="map-num">25</span><span class="map-label">04. Cronograma Adaptativo</span></div>
+    <div class="map-item highlight"><span class="map-num">26</span><span class="map-label">05. Autossabotagem</span></div>
+    <div class="map-item skip"><span class="map-num">27</span><span class="map-label">06. Biblioteca de Inteligência</span></div>
+    <div class="map-item skip"><span class="map-num">28</span><span class="map-label">07. Estratégia Academy</span></div>
+    <div class="map-item highlight"><span class="map-num">29</span><span class="map-label">08. Sessões ao Vivo Semanais</span></div>
+    <div class="map-item highlight"><span class="map-num">30</span><span class="map-label">09. WhatsApp Estratégico</span></div>
+    <div class="map-item skip"><span class="map-num">31</span><span class="map-label">10. Comunidade</span></div>
+    <div class="map-item skip"><span class="map-num">32</span><span class="map-label">Visual escudo (sem texto)</span></div>
+    <div class="map-item skip"><span class="map-num">33</span><span class="map-label">Dúvidas (1ª ocorrência)</span></div>
+    <div class="map-item highlight"><span class="map-num">34</span><span class="map-label">+5 Bônus Exclusivos</span></div>
+    <div class="map-item highlight"><span class="map-num">35</span><span class="map-label">Bônus 1 — Pós-Edital (R$997)</span></div>
+    <div class="map-item highlight"><span class="map-num">36</span><span class="map-label">Bônus 2 — Mapeamento Reprovação (R$1.497)</span></div>
+    <div class="map-item skip"><span class="map-num">37</span><span class="map-label">Bônus 3 — Atualizações (R$1.997)</span></div>
+    <div class="map-item skip"><span class="map-num">38</span><span class="map-label">Bônus 4 — Gravação Permanente (R$997)</span></div>
+    <div class="map-item skip"><span class="map-num">39</span><span class="map-label">Bônus 5 — Kit Pré-Prova (R$597)</span></div>
+    <div class="map-item skip"><span class="map-num">40</span><span class="map-label">Dúvidas (2ª ocorrência)</span></div>
+    <div class="map-item highlight"><span class="map-num">41</span><span class="map-label">VALOR x PREÇO</span></div>
+    <div class="map-item highlight"><span class="map-num">42</span><span class="map-label">Empilhamento — Total R$29.600</span></div>
+    <div class="map-item highlight"><span class="map-num">43</span><span class="map-label">Empilhamento + "desconto de 50%?"</span></div>
+    <div class="map-item highlight"><span class="map-num">44</span><span class="map-label">+ "Você seria aluno? R$14.800"</span></div>
+    <div class="map-item highlight"><span class="map-num">45</span><span class="map-label">Preço: R$8.000 / 8x R$1.107</span></div>
+    <div class="map-item skip"><span class="map-num">46</span><span class="map-label">Valor Aluno Decisivo (capa)</span></div>
+    <div class="map-item skip"><span class="map-num">47</span><span class="map-label">CAF — 1D/30D</span></div>
+    <div class="map-item skip"><span class="map-num">48</span><span class="map-label">CAF — Custos</span></div>
+    <div class="map-item skip"><span class="map-num">49</span><span class="map-label">CAF — Desconto Repassado</span></div>
+    <div class="map-item highlight"><span class="map-num">50</span><span class="map-label">Preço Final: 12x500 / R$5mil</span></div>
+    <div class="map-item skip"><span class="map-num">51</span><span class="map-label">Capa repetida Mentoria</span></div>
+    <div class="map-item skip"><span class="map-num">52</span><span class="map-label">Capa repetida Carreiras</span></div>
+    <div class="map-item skip"><span class="map-num">53</span><span class="map-label">Scanner repetido</span></div>
+    <div class="map-item skip"><span class="map-num">54</span><span class="map-label">Scanner repetido</span></div>
+    <div class="map-item skip"><span class="map-num">55</span><span class="map-label">Página em branco</span></div>
+    <div class="map-item skip"><span class="map-num">56</span><span class="map-label">Página em branco</span></div>
+    <div class="map-item highlight"><span class="map-num">57</span><span class="map-label">Garantia — Proteção do Dinheiro</span></div>
+  </div>
+</div>
+
+<!-- ======= ABA: ROTEIRO BASE ======= -->
+<div id="tab-geral" class="tab-panel">
+
+  <div class="summary-strip">
+    <div class="summary-icon">18</div>
+    <div class="summary-text">
+      <strong>18 páginas selecionadas de 57.</strong> Roteiro base para qualquer perfil de lead, com tempo estimado de <strong>45–60 min</strong>. Páginas verificadas visualmente — números 100% corretos.
+    </div>
+  </div>
+
+  <p class="section-title">ESTRUTURA DO ROTEIRO</p>
+  <p class="section-desc">Fluxo: Autoridade → Dor → Agitação → Custo → Solução → Módulos → Bônus → Preço → Garantia.</p>
+
+  <div class="pipeline">
+
+    <div class="stage">
+      <div class="stage-num gold">01</div>
+      <div class="stage-body">
+        <div class="stage-label gold">Abertura — Autoridade</div>
+        <div class="stage-title">Quem é o Expert</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">02</span> — Capa com foto do Thiago</div>
+          <div class="page-chip star">Pág. <span class="pn">04</span> — Bio Thiago Pacheco</div>
+        </div>
+        <div class="stage-tip">
+          <strong>Não abra os slides imediatamente.</strong> Antes, pergunte: <em>"Me conta sua história: o que te motivou a buscar essa carreira?"</em> Escute. Depois abra a pág. 02 e conte em 60 seg: Delegado, 20 anos, 12 concursos. Abra a pág. 04 e fique em silêncio enquanto o lead lê.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge conexao">CONEXAO</span>
+            <span class="nepq-title">NEPQ — Rapport e Conexão</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q1</span><span><em>O que te motivou a querer a carreira de Delegado especificamente?</em></span></div>
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q2</span><span><em>Há quanto tempo você está nessa jornada de preparação?</em></span></div>
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q3</span><span><em>Se você passasse nos próximos meses, o que mudaria concretamente na sua vida?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Escute sem interromper. As respostas revelam o nível emocional e qual dor aprofundar nas próximas fases.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num red">02</div>
+      <div class="stage-body">
+        <div class="stage-label red">Diagnóstico — A Dor do Mercado</div>
+        <div class="stage-title">Espelhar a realidade</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">05</span> — Cenário dos Concursos Hoje</div>
+        </div>
+        <div class="stage-tip red">
+          <strong>Pausa obrigatória aqui.</strong> Ao mostrar a pág. 05, leia os bullets em voz alta e pergunte: <em>"Qual dessas situações mais te representa hoje?"</em> — e escute tudo. Isso calibra o tom do restante da call.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge situacao">SITUACAO</span>
+            <span class="nepq-title">NEPQ — Situação Atual — Diagnóstico</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q1</span><span><em>Como você descreveria sua preparação hoje — você sente que tem controle sobre o que estuda?</em></span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q2</span><span><em>Você segue algum método específico, ou ainda está tentando encontrar o que funciona pra você?</em></span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q3</span><span><em>Em qual fase você sente que trava mais — conteúdo, questões ou a prova em si?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Não julgue nenhuma resposta. O objetivo é mapear o cenário real, não o ideal que o lead quer mostrar.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num red">03</div>
+      <div class="stage-body">
+        <div class="stage-label red">Agitação — O Padrão do Erro</div>
+        <div class="stage-title">Criar urgência emocional</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">08</span> — 80% repetem o MESMO erro 3x</div>
+          <div class="page-chip star">Pág. <span class="pn">09</span> — Não é coincidência, é padrão</div>
+          <div class="page-chip star">Pág. <span class="pn">10</span> — Riscos de fazer sozinho</div>
+        </div>
+        <div class="stage-tip red">
+          <strong>Pág. 08 é a mais poderosa do PDF inteiro.</strong> Ao mostrá-la, pause e pergunte: <em>"Você já sentiu que estava repetindo o mesmo ciclo de reprovação?"</em> Quando o lead responder sim — você criou identificação total. Só então avance para a pág. 09 e 10.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge problema">PROBLEMA</span>
+            <span class="nepq-title">NEPQ — Consciência do Problema</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q problema"><span class="nepq-q-num">Q1</span><span><em>Quando você pensa no seu histórico de estudo, o que você acha que está te impedindo de passar?</em></span></div>
+            <div class="nepq-q problema"><span class="nepq-q-num">Q2</span><span><em>Você já teve a sensação de estudar muito e mesmo assim não evoluir como esperava?</em></span></div>
+            <div class="nepq-q problema"><span class="nepq-q-num">Q3</span><span><em>O que você acha que está fazendo diferente de quem passa — ou o que ainda não descobriu?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Deixe o lead responder. Ele está, nesse momento, se convencendo do problema — não você.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num red">04</div>
+      <div class="stage-body">
+        <div class="stage-label red">Custo de Não Agir</div>
+        <div class="stage-title">Mostrar o que está perdendo</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">11</span> — O que você vai ter (6 benefícios)</div>
+        </div>
+        <div class="stage-tip red">
+          Diga: <em>"Agora imagina ter tudo isso funcionando pra você. Quanto valeria isso na sua aprovação?"</em> — a pergunta está literalmente no slide. Deixe o lead responder. A resposta dele vai justificar o preço depois.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge consequencia">CONSEQUENCIA</span>
+            <span class="nepq-title">NEPQ — Consequência — Custo de Não Agir</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q consequencia"><span class="nepq-q-num">Q1</span><span><em>Se você continuar no ritmo atual, quanto tempo você acha que ainda vai levar para passar?</em></span></div>
+            <div class="nepq-q consequencia"><span class="nepq-q-num">Q2</span><span><em>O que mais pesa pra você enquanto os anos de preparação passam sem resultado?</em></span></div>
+            <div class="nepq-q consequencia"><span class="nepq-q-num">Q3</span><span><em>Financeiramente, o que essa demora está custando pra você — em cursos, tempo, oportunidades?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Essa é a etapa mais poderosa do NEPQ. Não responda após a pergunta — aguarde. O silêncio trabalha a favor do fechamento.</div>
+        </div>
+      </div>
+    </div>
+
+
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge compromisso">Compromisso</span>
+            <span class="nepq-title">NEPQ — Pergunta de Comprometimento Antecipado</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q compromisso"><span class="nepq-q-num">&#9733;</span><span><em>"[Nome], antes de eu te mostrar como o plano funciona, preciso te fazer uma pergunta direta. Se tudo que eu apresentar fizer total sentido pra você — e você enxergar que isso resolve exatamente o que você me descreveu — você estaria pronto para tomar uma decisão hoje?"</em></span></div>
+            <div class="nepq-q consequencia"><span class="nepq-q-num">&#8627;</span><span>Se o lead disser <strong style="color:var(--text)">"depende do preço / se vou conseguir pagar"</strong>:<br><br><em>"Entendo. Se o investimento estivesse dentro do que você consegue, você teria convicção de que esse é o caminho certo pra você?"</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">&#10003;</span><span>Lead diz <strong style="color:var(--green)">SIM</strong> → <em>"Então me deixa te mostrar como a gente resolve isso."</em> → Siga para a apresentação normalmente. Na hora do preço, apresente o parcelamento com confiança.</span></div>
+          </div>
+          <div class="nepq-note">⟶ Faça essa pergunta ANTES de abrir qualquer slide de solução. O "sim" do lead aqui é o comprometimento que elimina o "preciso pensar" no fechamento.</div>
+        </div>
+
+    <div class="stage">
+      <div class="stage-num blue">05</div>
+      <div class="stage-body">
+        <div class="stage-label blue">Solução — O Sistema</div>
+        <div class="stage-title">Apresentar o método sem revelar preço</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">13</span> — Sistema 3 Fases (simples)</div>
+          <div class="page-chip star">Pág. <span class="pn">14</span> — Sistema 3 Fases (detalhado)</div>
+          <div class="page-chip star">Pág. <span class="pn">15</span> — 8 Alavancas — gráfico radar</div>
+        </div>
+        <div class="stage-tip blue">
+          <strong>Na pág. 13</strong>, conte as 3 fases como história: <em>"Primeiro a gente descobre onde você está vazando pontos. Depois traçamos a rota. Depois caminhamos junto."</em> Na pág. 15, aponte o gráfico radar e diga: <em>"Isso aqui mostra em quais das 8 alavancas você está perdendo pontos. A maioria das pessoas nunca soube disso."</em>
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge solucao">SOLUCAO</span>
+            <span class="nepq-title">NEPQ — Consciência da Solução</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q1</span><span><em>Se existisse um diagnóstico que mostrasse exatamente onde você está perdendo pontos, você usaria?</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q2</span><span><em>O que faria diferença pra você ter mais clareza sobre o que estudar e o que ignorar?</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q3</span><span><em>Se você tivesse alguém do seu lado validando cada decisão estratégica, como isso mudaria sua preparação?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Perguntas de solução fazem o lead descrever o produto antes de você apresentá-lo. Anote as palavras exatas que ele usar.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num blue">06</div>
+      <div class="stage-body">
+        <div class="stage-label blue">Mecanismo — O que está dentro</div>
+        <div class="stage-title">Módulos selecionados por impacto</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">20</span> — O que é a Mentoria</div>
+          <div class="page-chip star">Pág. <span class="pn">21</span> — Não é curso, é sistema</div>
+          <div class="page-chip star">Pág. <span class="pn">22</span> — 01. Scanner com IA</div>
+          <div class="page-chip star">Pág. <span class="pn">23</span> — 02. Diagnóstico 48h</div>
+          <div class="page-chip star">Pág. <span class="pn">25</span> — 04. Cronograma Adaptativo</div>
+          <div class="page-chip star">Pág. <span class="pn">29</span> — 08. Sessões ao Vivo</div>
+          <div class="page-chip star">Pág. <span class="pn">30</span> — 09. WhatsApp Estratégico</div>
+        </div>
+        <div class="stage-tip blue">
+          <strong>Não leia todos os 10 módulos.</strong> Escolha 3–4 que conectam com o problema que o lead relatou no início. As págs. 22, 23 e 29 costumam ter maior impacto porque mostram acompanhamento real, não conteúdo gravado.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge qualificacao">QUALIFICACAO</span>
+            <span class="nepq-title">NEPQ — Qualificação e Fit</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q qualificacao"><span class="nepq-q-num">Q1</span><span><em>O que te fez marcar essa conversa agora — o que mudou ou o que te fez dar esse passo?</em></span></div>
+            <div class="nepq-q qualificacao"><span class="nepq-q-num">Q2</span><span><em>Você já investiu em algum outro programa de mentoria ou acompanhamento antes? Como foi?</em></span></div>
+            <div class="nepq-q qualificacao"><span class="nepq-q-num">Q3</span><span><em>Se você encontrasse o método certo hoje, você estaria disposto a começar imediatamente?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Se o lead hesitar na última pergunta, aprofunde a consequência antes de avançar para a oferta.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num gold">07</div>
+      <div class="stage-body">
+        <div class="stage-label gold">Bônus + Empilhamento de Valor</div>
+        <div class="stage-title">Revelar os bônus antes do preço</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">34</span> — +5 Bônus Exclusivos</div>
+          <div class="page-chip star">Pág. <span class="pn">35</span> — Bônus 1: Pós-Edital</div>
+          <div class="page-chip star">Pág. <span class="pn">36</span> — Bônus 2: Mapeamento Reprovação</div>
+          <div class="page-chip star">Pág. <span class="pn">41</span> — Valor X Preço</div>
+          <div class="page-chip star">Pág. <span class="pn">42</span> — Empilhamento R$29.600</div>
+          <div class="page-chip star">Pág. <span class="pn">43</span> — + Desconto 50%?</div>
+          <div class="page-chip star">Pág. <span class="pn">44</span> — Você seria aluno? R$14.800</div>
+        </div>
+        <div class="stage-tip">
+          <strong>Sequência de empilhamento:</strong> pág. 42 (mostra R$29.600) → pág. 43 (pergunta sobre 50%) → pág. 44 (pergunta se seria aluno a R$14.800). Essa sequência está montada no próprio PDF. Só avance para o preço real quando o lead responder.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge solucao">SOLUCAO</span>
+            <span class="nepq-title">NEPQ — Valor e Desejo — Pré-Oferta</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q1</span><span><em>Das coisas que eu apresentei até aqui, o que fez mais sentido pra você — o que mais conectou com sua situação?</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q2</span><span><em>Se você pudesse resolver um único problema na sua preparação agora, qual seria?</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q3</span><span><em>O que você precisaria ver ou sentir para ter certeza de que esse é o caminho certo pra você?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ A resposta da última pergunta é a âncora do fechamento — use as palavras do lead na hora de fechar.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num green">08</div>
+      <div class="stage-body">
+        <div class="stage-label green">Fechamento — Preço + Garantia</div>
+        <div class="stage-title">Revelar o preço e blindar com garantia</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">45</span> — Preço Padrão R$8.000 / 8x R$1.107</div>
+          <div class="page-chip star">Pág. <span class="pn">50</span> — Valor Aluno Decisivo: 12x500 / R$5mil</div>
+          <div class="page-chip star">Pág. <span class="pn">57</span> — Garantia: dinheiro de volta no Pix</div>
+        </div>
+        <div class="stage-tip green">
+          <strong>Ordem exata:</strong> pág. 45 (preço padrão) → pág. 50 (valor aluno decisivo, exclusivo da call) → pág. 57 (garantia). Ao mostrar a pág. 57 diga: <em>"Se você aplicar o método e não tiver resultado, nós devolvemos o seu dinheiro no Pix. O risco é 100% nosso."</em> Então feche: <em>"Você quer começar pelo boleto ou cartão?"</em>
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge compromisso">COMPROMISSO</span>
+            <span class="nepq-title">NEPQ — Fechamento e Compromisso</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q compromisso"><span class="nepq-q-num">Q1</span><span><em>Com base em tudo que conversamos, você consegue enxergar como isso resolve exatamente o que você descreveu?</em></span></div>
+            <div class="nepq-q compromisso"><span class="nepq-q-num">Q2</span><span><em>O que te impediria de começar hoje e resolver isso de uma vez?</em></span></div>
+            <div class="nepq-q compromisso"><span class="nepq-q-num">Q3</span><span><em>Dado que o risco está 100% do nosso lado com a garantia, o que faria mais sentido pra você — começar pelo à vista ou parcelado?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Se surgir uma objeção aqui, ela já foi respondida nas fases anteriores. Volte à consequência que o lead descreveu com as próprias palavras dele.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======= ABA: TIPO 1 ======= -->
+<div id="tab-tipo1" class="tab-panel">
+
+  <div class="diff-grid">
+    <div class="diff-card red">
+      <div class="diff-card-tag red">Perfil do Lead</div>
+      <h3>Tipo 1 — Já Estuda, Não Passa</h3>
+      <ul>
+        <li>Estuda há 1, 2 ou mais anos</li>
+        <li>Sente que faz tudo certo mas reprova</li>
+        <li>Já comprou cursos e materiais</li>
+        <li>Tem cansaço emocional / autossabotagem</li>
+        <li>Maior resistência ao preço (já gastou muito)</li>
+      </ul>
+    </div>
+    <div class="diff-card blue">
+      <div class="diff-card-tag blue">Estratégia Central</div>
+      <h3>Linguagem: "Você não está errado — o método está"</h3>
+      <ul>
+        <li>Validar o esforço dele antes de tudo</li>
+        <li>Mostrar que o problema é sistêmico, não pessoal</li>
+        <li>Focar nos "erros invisíveis" — ele vai se reconhecer</li>
+        <li>Scanner com IA é o argumento mais forte</li>
+        <li>Bônus 2 (pág. 36) é o diferencial decisivo</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="section-title">SEQUÊNCIA — TIPO 1</p>
+  <p class="section-desc">Tempo estimado: 50–60 min.</p>
+
+  <div class="pipeline">
+
+    <div class="stage">
+      <div class="stage-num gold">0</div>
+      <div class="stage-body">
+        <div class="stage-label gold">Introdução — Rapport</div>
+        <div class="stage-title">Antes de qualquer slide — 5 a 8 minutos</div>
+        <div class="stage-tip">
+          <strong>Camada 1 — Conexão pessoal:</strong> Humanize a conversa antes de qualquer assunto profissional. Descubra se o lead está presente e tranquilo.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge conexao">CONEXÃO</span>
+            <span class="nepq-title">Rapport — Camada 1: Conexão Pessoal</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q1</span><span><em>"[Nome], antes de a gente começar — de onde você está falando agora?"</em></span></div>
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q2</span><span><em>"Você conseguiu um tempinho tranquilo pra gente conversar ou está correndo?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Parece simples, mas cumpre duas funções: quebra a tensão inicial e te diz se o lead está presente ou distraído. Se estiver correndo, reduza o ritmo e pergunte se prefere reagendar.</div>
+        </div>
+        <div class="stage-tip" style="margin-top:8px;">
+          <strong>Camada 2 — Conexão com o momento:</strong> Descubra o motivo de estar ali e o nível de familiaridade com o Thiago.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge situacao">SITUAÇÃO</span>
+            <span class="nepq-title">Rapport — Camada 2: Conexão com o Momento</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q1</span><span><em>"Me conta — o que te fez marcar essa conversa? O que aconteceu que te fez dar esse passo agora?"</em></span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q2</span><span><em>"Você já conhecia o trabalho do Delegado Thiago antes, ou foi a primeira vez que você teve contato?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Se ele já conhece o Thiago, ele tem mais confiança — avance mais rápido na autoridade. Se não conhece, dedique mais tempo à bio na Fase 1.</div>
+        </div>
+        <div class="stage-tip" style="margin-top:8px;">
+          <strong>Camada 3 — Conexão com o sonho:</strong> Ative o estado emocional positivo antes de mergulhar na dor. Essa resposta você vai usar no fechamento.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge solucao">SONHO</span>
+            <span class="nepq-title">Rapport — Camada 3: Conexão com o Sonho</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q1</span><span><em>"Me conta um pouco sobre você — por que carreira policial? O que te atrai nessa área?"</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q2</span><span><em>"Se você passar e assumir o cargo, o que muda na sua vida — no dia a dia mesmo?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Essa última pergunta é a mais importante do rapport. Quando o lead descreve o futuro com as próprias palavras, ele ativa o estado de desejo — guarde essa resposta e use no fechamento.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num gold">1</div>
+      <div class="stage-body">
+        <div class="stage-label gold">0–5 min — Rapport + Validação</div>
+        <div class="stage-title">Págs. 02 e 04 — Expert</div>
+        <div class="stage-tip">
+          Antes de abrir qualquer slide: <em>"Antes de qualquer coisa, me conta — há quanto tempo você está estudando e qual foi sua última experiência com concurso?"</em> Escute tudo. Só então abra as páginas. Essa informação vai guiar qual módulo destacar depois.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge gold" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid var(--gold-dim);">EXPERT</span>
+            <span class="nepq-title">Resumo do Delegado Thiago Pacheco — fale isso antes de abrir a pág. 02</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q situacao"><span class="nepq-q-num">&#9733;</span><span>Formado em Direito pela <strong style="color:var(--text)">UFMG</strong>, passou na OAB faltando 2 períodos para se formar.</span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">&#9733;</span><span>Aprovado no concurso de Delegado de Polícia aos <strong style="color:var(--text)">24 anos</strong> — assumiu o cargo aos <strong style="color:var(--text)">25 anos</strong>.</span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">&#9733;</span><span>Leciona há mais de <strong style="color:var(--text)">20 anos</strong> — professor de pós-graduação da Faculdade Batista, professor na <strong style="color:var(--text)">Gran Cursos</strong>, <strong style="color:var(--text)">Aprova Concursos</strong> e <strong style="color:var(--text)">Acadepol/MG</strong>.</span></div>
+          </div>
+          <div class="nepq-note">⟶ Conte isso em voz alta antes de abrir qualquer slide — a bio falada tem mais impacto do que a lida. Só então abra a pág. 02 para ancorar visualmente o que você acabou de dizer.</div>
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge conexao">CONEXÃO</span>
+            <span class="nepq-title">NEPQ — Fase 1: Investigação sem Julgamento</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q1</span><span><em>"Quando você pensa na sua preparação hoje, o que você diria que está funcionando — e o que honestamente não está?"</em></span></div>
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q2</span><span><em>"Em algum momento você já teve a sensação de estar se dedicando muito mas evoluindo pouco?"</em></span></div>
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q3</span><span><em>"O que você acha que te separa hoje de quem está passando nos concursos que você está tentando?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Depois de cada resposta, use o espelho do NEPQ — repita a última palavra ou frase do lead em tom de pergunta. Se ele disser "acho que estou perdendo tempo", você responde "perdendo tempo?" — e ele vai aprofundar sozinho.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num red">2</div>
+      <div class="stage-body">
+        <div class="stage-label red">5–15 min — Espelho da Dor</div>
+        <div class="stage-title">Págs. 05, 08, 09</div>
+        <div class="stage-tip red">
+          <strong>Frase-gatilho na pág. 08:</strong> <em>"80% dos candidatos avançados — aqueles que estudam de verdade como você — repetem o mesmo erro 3 vezes. Isso não é falta de esforço. É falta de diagnóstico."</em> Pause. Deixe pesar. Aguarde a reação.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge problema">PROBLEMA</span>
+            <span class="nepq-title">NEPQ — Fase 2: Agitação Ancorada no Slide</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q problema"><span class="nepq-q-num">Q1</span><span><em>"Olhando pra esse slide aqui — 80% dos candidatos avançados repetem o mesmo erro 3 vezes. Você consegue identificar em qual desses erros você está preso agora?"</em></span></div>
+            <div class="nepq-q problema"><span class="nepq-q-num">Q2</span><span><em>"Você já mudou de estratégia de estudo depois de uma reprovação? O que foi diferente — e o que continuou igual?"</em></span></div>
+            <div class="nepq-q problema"><span class="nepq-q-num">Q3</span><span><em>"Quando você reprova, qual é o primeiro pensamento que vem? Você culpa o conteúdo, o tempo de estudo, ou algo que você não consegue nomear ainda?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ A Q1 ancora a pergunta no slide — o lead aponta para algo concreto, não abstrato. A Q3 é a mais poderosa: "algo que você não consegue nomear ainda" é exatamente o que o Scanner do produto identifica. Você está plantando a semente da solução antes de apresentá-la.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num red">3</div>
+      <div class="stage-body">
+        <div class="stage-label red">15–20 min — Custo Real</div>
+        <div class="stage-title">Págs. 10 e 11</div>
+        <div class="stage-tip red">
+          Leia os riscos da pág. 10 em voz alta. Para Tipo 1, "gastar mais dinheiro pagando anuidades" e "desperdiçar anos estudando da forma errada" geram a maior reação. Pergunte: <em>"Qual desses você já viveu?"</em>
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge consequencia">CONSEQUENCIA</span>
+            <span class="nepq-title">NEPQ — Consequência — O Custo do Ciclo</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q consequencia"><span class="nepq-q-num">Q1</span><span><em>Se você continuar no ritmo atual, quantos anos a mais você estima gastar antes de passar?</em></span></div>
+            <div class="nepq-q consequencia"><span class="nepq-q-num">Q2</span><span><em>O que essa demora está custando pra você além do dinheiro — na sua vida pessoal, profissional, emocional?</em></span></div>
+            <div class="nepq-q consequencia"><span class="nepq-q-num">Q3</span><span><em>Já houve algum momento em que você pensou em desistir? O que te impede de parar?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Essa última pergunta é a mais poderosa para o Tipo 1. A resposta revela o valor real que ele dá ao sonho — use isso no fechamento.</div>
+        </div>
+      </div>
+    </div>
+
+
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge compromisso">Compromisso</span>
+            <span class="nepq-title">NEPQ — Pergunta de Comprometimento Antecipado</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q compromisso"><span class="nepq-q-num">&#9733;</span><span><em>"[Nome], antes de eu te mostrar como o plano funciona, preciso te fazer uma pergunta direta. Se tudo que eu apresentar fizer total sentido pra você — e você enxergar que isso resolve exatamente o que você me descreveu — você estaria pronto para tomar uma decisão hoje?"</em></span></div>
+            <div class="nepq-q consequencia"><span class="nepq-q-num">&#8627;</span><span>Se o lead disser <strong style="color:var(--text)">"depende do preço / se vou conseguir pagar"</strong>:<br><br><em>"Entendo. Se o investimento estivesse dentro do que você consegue, você teria convicção de que esse é o caminho certo pra você?"</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">&#10003;</span><span>Lead diz <strong style="color:var(--green)">SIM</strong> → <em>"Então me deixa te mostrar como a gente resolve isso."</em> → Siga para a apresentação normalmente. Na hora do preço, apresente o parcelamento com confiança.</span></div>
+          </div>
+          <div class="nepq-note">⟶ Faça essa pergunta ANTES de abrir qualquer slide de solução. O "sim" do lead aqui é o comprometimento que elimina o "preciso pensar" no fechamento.</div>
+        </div>
+
+    <div class="stage">
+      <div class="stage-num blue">4</div>
+      <div class="stage-body">
+        <div class="stage-label blue">20–32 min — Solução</div>
+        <div class="stage-title">Págs. 13, 14, 15, 20, 21, 22, 23, 24, 26</div>
+        <div class="stage-tip blue">
+          Para Tipo 1, <strong>destaque a pág. 26 (Protocolo de Autossabotagem)</strong>: <em>"Esse módulo aqui é específico pra quem já estuda bastante e mesmo assim reprova. Não é falta de conteúdo — é um padrão mental que trabalha contra você."</em>
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge solucao">SOLUCAO</span>
+            <span class="nepq-title">NEPQ — Solução — O que Ele Realmente Precisa</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q1</span><span><em>Se alguém identificasse exatamente onde você está perdendo pontos, o que isso mudaria na sua preparação?</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q2</span><span><em>O que você acha que ainda não foi corrigido em nenhum curso que você fez?</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q3</span><span><em>Como seria pra você ter alguém do seu lado validando cada decisão — sem precisar adivinhar o caminho?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Anote as palavras exatas do lead. Na hora do fechamento, use a linguagem dele para conectar o produto ao desejo.</div>
+        </div>
+      </div>
+    </div>
+
+    
+        
+
+            <div class="stage">
+      <div class="stage-num gold">5</div>
+      <div class="stage-body">
+        <div class="stage-label gold">32–58 min — Valor, Bônus e Oferta</div>
+        <div class="stage-title">Págs. 41 → 42 → 34–39 → 45 → 46 → 50 → 57</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">41</span> — Valor x Preço</div>
+          <div class="page-chip star">Pág. <span class="pn">42</span> — Benchmark do Produto</div>
+          <div class="page-chip star">Págs. <span class="pn">34–39</span> — Todos os Bônus</div>
+          <div class="page-chip star">Pág. <span class="pn">45</span> — Preço Padrão</div>
+          <div class="page-chip star">Pág. <span class="pn">46</span> — Valor Aluno Decisivo (capa)</div>
+          <div class="page-chip star">Pág. <span class="pn">50</span> — Valor Aluno Decisivo: 12x500 / R$5mil</div>
+          <div class="page-chip star">Pág. <span class="pn">57</span> — Garantia</div>
+        </div>
+        <div class="stage-tip">
+          <strong>Transição falada antes de abrir qualquer slide:</strong> <em>"[Nome], antes de te mostrar o investimento, deixa eu te mostrar tudo o que você está recebendo — porque eu quero que você compare valor com valor, não valor com preço."</em>
+        </div>
+        <div class="stage-tip" style="margin-top:8px;">
+          <strong>Sequência de apresentação:</strong> Pág. 41 (ancora valor x preço) → Pág. 42 (benchmark do produto) → Justificativa dos bônus → Págs. 34 a 39 (apresenta cada bônus) → Pág. 45 (revela preço padrão) → Pág. 46 (capa Valor Aluno Decisivo) → Pág. 50 (revela 12x500 / R$5mil) → Pág. 57 (garantia) → Fecha.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge situacao">Contexto</span>
+            <span class="nepq-title">Justificativa dos Bônus — págs. 34 a 39</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q situacao"><span class="nepq-q-num">&#9733;</span><span><em>"[Nome], antes de te mostrar os bônus, deixa eu te explicar por que eles existem. Esses bônus não são oferecidos para todo mundo — são exclusivos para quem entra agora, nesse grupo inicial de alunos. O motivo é simples: quanto mais aprovações a gente gerar nesse primeiro ciclo, mais forte fica o método. Então a gente tem interesse direto no seu resultado. Por isso estamos colocando tudo isso junto — para garantir que você chegue lá."</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Diga isso ANTES de abrir a pág. 34. Essa justificativa transforma os bônus em exclusividade — não em desconto. Cria urgência natural: quem entra agora tem o que quem entrar depois não terá.</div>
+        </div>
+        <div class="stage-tip green" style="margin-top:8px;">
+          <strong>Última oferta — se houver hesitação após a garantia:</strong> <em>"[Nome], só para garantir que você está tomando a melhor decisão — o que eu posso fazer é te mostrar uma condição especial que a gente reserva para quem decide na call. Você quer ver?"</em> → Pág. 46 como surpresa antes de fechar.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge compromisso">COMPROMISSO</span>
+            <span class="nepq-title">NEPQ — Fechamento: Espelho + Confirmação + Caminho</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q compromisso"><span class="nepq-q-num">Q1</span><span><em>"[Nome], lembra quando você me disse que [repita algo que o lead falou no rapport ou na fase de dor]? Com base em tudo que você viu hoje, você sente que esse é o caminho pra resolver isso?"</em></span></div>
+            <div class="nepq-q compromisso"><span class="nepq-q-num">Q2</span><span><em>"O que você está sentindo agora sobre tudo isso — você sente que faz sentido pra sua situação?"</em></span></div>
+            <div class="nepq-q compromisso"><span class="nepq-q-num">Q3</span><span><em>"Tem alguma coisa que ainda não ficou clara pra você antes de a gente definir o próximo passo?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ A Q1 usa as palavras do próprio lead — o fechamento mais poderoso do NEPQ. A Q2 confirma o estado interno dele. A Q3 abre objeções escondidas ou confirma que não há mais resistência. Só depois das três pergunte: "Então vamos definir — você prefere começar pelo à vista ou parcelado?"</div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+</div><!-- /tab-tipo1 -->
+
+<!-- ======= ABA: TIPO 2 ======= -->
+<div id="tab-tipo2" class="tab-panel">
+
+  <div class="diff-grid">
+    <div class="diff-card red">
+      <div class="diff-card-tag red">Perfil do Lead</div>
+      <h3>Tipo 2 — Nunca Prestou, Não Sabe por Onde Começar</h3>
+      <ul>
+        <li>Tem o sonho mas está paralisado</li>
+        <li>Medo de investir anos sem passar</li>
+        <li>Não conhece a dinâmica de concursos</li>
+        <li>Mais aberto a ouvir — menos resistência inicial</li>
+        <li>Precisa entender o mercado antes do produto</li>
+      </ul>
+    </div>
+    <div class="diff-card blue">
+      <div class="diff-card-tag blue">Estratégia Central</div>
+      <h3>Linguagem: "Você tem a vantagem de começar certo"</h3>
+      <ul>
+        <li>Mostrar o mercado como competitivo e perigoso</li>
+        <li>Posicionar o método como o atalho seguro</li>
+        <li>Focar no sistema de 3 fases — simples e claro</li>
+        <li>Usar a bio do Thiago como prova social</li>
+        <li>Bônus 1 (pág. 35) é o mais relevante aqui</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="section-title">SEQUÊNCIA — TIPO 2</p>
+  <p class="section-desc">Tempo estimado: 45–55 min.</p>
+
+  <div class="pipeline">
+
+    <div class="stage">
+      <div class="stage-num gold">0</div>
+      <div class="stage-body">
+        <div class="stage-label gold">Introdução — Rapport</div>
+        <div class="stage-title">Antes de qualquer slide — 5 a 8 minutos</div>
+        <div class="stage-tip">
+          <strong>Camada 1 — Conexão pessoal:</strong> Humanize a conversa antes de qualquer assunto profissional. Descubra se o lead está presente e tranquilo.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge conexao">CONEXÃO</span>
+            <span class="nepq-title">Rapport — Camada 1: Conexão Pessoal</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q1</span><span><em>"[Nome], antes de a gente começar — de onde você está falando agora?"</em></span></div>
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q2</span><span><em>"Você conseguiu um tempinho tranquilo pra gente conversar ou está correndo?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Parece simples, mas cumpre duas funções: quebra a tensão inicial e te diz se o lead está presente ou distraído. Se estiver correndo, reduza o ritmo e pergunte se prefere reagendar.</div>
+        </div>
+        <div class="stage-tip" style="margin-top:8px;">
+          <strong>Camada 2 — Conexão com o momento:</strong> Descubra o motivo de estar ali e o nível de familiaridade com o Thiago.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge situacao">SITUAÇÃO</span>
+            <span class="nepq-title">Rapport — Camada 2: Conexão com o Momento</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q1</span><span><em>"Me conta — o que te fez marcar essa conversa? O que aconteceu que te fez dar esse passo agora?"</em></span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q2</span><span><em>"Você já conhecia o trabalho do Delegado Thiago antes, ou foi a primeira vez que você teve contato?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Se ele já conhece o Thiago, avance mais rápido na autoridade. Se não conhece, dedique mais tempo à bio na Fase 1.</div>
+        </div>
+        <div class="stage-tip" style="margin-top:8px;">
+          <strong>Camada 3 — Conexão com o sonho:</strong> Ative o estado emocional positivo antes de mostrar a dificuldade do mercado. Essa resposta você vai usar no fechamento.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge solucao">SONHO</span>
+            <span class="nepq-title">Rapport — Camada 3: Conexão com o Sonho</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q1</span><span><em>"Me conta um pouco sobre você — por que carreira policial? O que te atrai nessa área?"</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q2</span><span><em>"Se você passar e assumir o cargo, o que muda na sua vida — no dia a dia mesmo?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Para o Tipo 2, validar o sonho aqui é essencial antes de mostrar a dificuldade do mercado. Ele precisa estar emocionalmente conectado ao objetivo para sentir o peso do que pode perder ao ir sozinho.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num gold">1</div>
+      <div class="stage-body">
+        <div class="stage-label gold">0–5 min — Contexto + Autoridade</div>
+        <div class="stage-title">Págs. 02 e 04</div>
+        <div class="stage-tip">
+          Pergunte antes: <em>"O que te fez querer a carreira policial? O que te travou até agora?"</em> Valide o sonho antes de mostrar a dificuldade. Só então abra as páginas.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge gold" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid var(--gold-dim);">EXPERT</span>
+            <span class="nepq-title">Resumo do Delegado Thiago Pacheco — fale isso antes de abrir a pág. 02</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q situacao"><span class="nepq-q-num">&#9733;</span><span>Formado em Direito pela <strong style="color:var(--text)">UFMG</strong>, passou na OAB faltando 2 períodos para se formar.</span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">&#9733;</span><span>Aprovado no concurso de Delegado de Polícia aos <strong style="color:var(--text)">24 anos</strong> — assumiu o cargo aos <strong style="color:var(--text)">25 anos</strong>.</span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">&#9733;</span><span>Leciona há mais de <strong style="color:var(--text)">20 anos</strong> — professor de pós-graduação da Faculdade Batista, professor na <strong style="color:var(--text)">Gran Cursos</strong>, <strong style="color:var(--text)">Aprova Concursos</strong> e <strong style="color:var(--text)">Acadepol/MG</strong>.</span></div>
+          </div>
+          <div class="nepq-note">⟶ Conte isso em voz alta antes de abrir qualquer slide — a bio falada tem mais impacto do que a lida. Só então abra a pág. 02 para ancorar visualmente o que você acabou de dizer.</div>
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge conexao">CONEXÃO</span>
+            <span class="nepq-title">NEPQ — Fase 1: Investigação sem Julgamento</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q1</span><span><em>"Você tem alguma ideia de como funciona a preparação para esse nível de concurso — ou ainda está tentando entender por onde começar?"</em></span></div>
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q2</span><span><em>"Você já conversou com alguém que tentou ou passou em concurso policial? O que você ouviu sobre essa jornada?"</em></span></div>
+            <div class="nepq-q conexao"><span class="nepq-q-num">Q3</span><span><em>"Se você fosse começar a estudar amanhã sem nenhuma orientação, por onde você iria?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Depois de cada resposta, use o espelho do NEPQ — repita a última palavra ou frase em tom de pergunta para o lead aprofundar sozinho. A terceira pergunta expõe o vazio de direção sem que você precise dizer nada.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num red">2</div>
+      <div class="stage-body">
+        <div class="stage-label red">5–15 min — O Mercado + A Ameaça</div>
+        <div class="stage-title">Págs. 05 e 10</div>
+        <div class="stage-tip red">
+          Para Tipo 2, a pág. 05 funciona como alerta: <em>"Olha como está o cenário: muitos candidatos, poucas vagas, e a maioria vai na direção errada desde o dia 1. Essa é exatamente a armadilha que queremos te ajudar a evitar."</em>
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge situacao">SITUACAO</span>
+            <span class="nepq-title">NEPQ — Situação — O Que Ele Sabe (ou Não)</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q1</span><span><em>Como você imagina que é a preparação para um concurso desse nível?</em></span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q2</span><span><em>Você tem alguma ideia de por onde começar, ou está completamente no escuro ainda?</em></span></div>
+            <div class="nepq-q situacao"><span class="nepq-q-num">Q3</span><span><em>Você conhece alguém que já tentou ou passou? Como foi a experiência dessa pessoa?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ As respostas revelam o nível de conhecimento do lead sobre o mercado. Adapte o discurso ao que ele já sabe.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-num red">3</div>
+      <div class="stage-body">
+        <div class="stage-label red">15–20 min — Custo de Começar Errado</div>
+        <div class="stage-title">Págs. 08 e 09</div>
+        <div class="stage-tip red">
+          <strong>Adaptação para Tipo 2:</strong> <em>"Você ainda não cometeu esses erros — e é exatamente por isso que esse momento é valioso. Você tem a chance de começar com o mapa na mão, sem desperdiçar anos tentando no escuro."</em>
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge consequencia">CONSEQUENCIA</span>
+            <span class="nepq-title">NEPQ — Consequência — O Custo de Começar Errado</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q consequencia"><span class="nepq-q-num">Q1</span><span><em>Você sabe que a maioria das pessoas que tenta sem método leva 3, 4, 5 anos sem passar. O que esse tempo custaria pra você?</em></span></div>
+            <div class="nepq-q consequencia"><span class="nepq-q-num">Q2</span><span><em>Se você começar na direção errada hoje, quanto tempo e dinheiro você acha que perderia antes de corrigir?</em></span></div>
+            <div class="nepq-q consequencia"><span class="nepq-q-num">Q3</span><span><em>O que impediria você de tomar uma decisão agora e começar com o método certo desde o início?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Para Tipo 2 o medo é desperdiçar tempo — use isso. A consequência não é de uma reprovação, mas de anos perdidos por falta de direção.</div>
+        </div>
+      </div>
+    </div>
+
+
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge compromisso">Compromisso</span>
+            <span class="nepq-title">NEPQ — Pergunta de Comprometimento Antecipado</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q compromisso"><span class="nepq-q-num">&#9733;</span><span><em>"[Nome], antes de eu te mostrar como o plano funciona, preciso te fazer uma pergunta direta. Se tudo que eu apresentar fizer total sentido pra você — e você enxergar que isso resolve exatamente o que você me descreveu — você estaria pronto para tomar uma decisão hoje?"</em></span></div>
+            <div class="nepq-q consequencia"><span class="nepq-q-num">&#8627;</span><span>Se o lead disser <strong style="color:var(--text)">"depende do preço / se vou conseguir pagar"</strong>:<br><br><em>"Entendo. Se o investimento estivesse dentro do que você consegue, você teria convicção de que esse é o caminho certo pra você?"</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">&#10003;</span><span>Lead diz <strong style="color:var(--green)">SIM</strong> → <em>"Então me deixa te mostrar como a gente resolve isso."</em> → Siga para a apresentação normalmente. Na hora do preço, apresente o parcelamento com confiança.</span></div>
+          </div>
+          <div class="nepq-note">⟶ Faça essa pergunta ANTES de abrir qualquer slide de solução. O "sim" do lead aqui é o comprometimento que elimina o "preciso pensar" no fechamento.</div>
+        </div>
+
+    <div class="stage">
+      <div class="stage-num blue">4</div>
+      <div class="stage-body">
+        <div class="stage-label blue">20–32 min — O Caminho Certo</div>
+        <div class="stage-title">Págs. 13, 14, 15, 20, 21, 24, 25, 29</div>
+        <div class="stage-tip blue">
+          Para Tipo 2, destaque <strong>pág. 24 (Priorização por Banca)</strong> e <strong>pág. 25 (Cronograma Adaptativo)</strong>: <em>"Você não vai precisar adivinhar o que estudar. O sistema mapeia exatamente o que a banca cobra e monta um cronograma que cabe na sua rotina real."</em>
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge solucao">SOLUCAO</span>
+            <span class="nepq-title">NEPQ — Solução — Começar com o Mapa</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q1</span><span><em>Se você pudesse começar já sabendo exatamente o que estudar e o que ignorar, como isso mudaria sua preparação?</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q2</span><span><em>O que seria mais valioso pra você: ter um plano pronto ou ter alguém do seu lado construindo esse plano com você?</em></span></div>
+            <div class="nepq-q solucao"><span class="nepq-q-num">Q3</span><span><em>Você prefere descobrir o caminho sozinho ao longo dos anos — ou começar já com quem mapeou esse caminho 12 vezes?</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ A última pergunta é retórica — mas eficaz. Deixe o lead responder em voz alta e o processo de convencimento acontece naturalmente.</div>
+        </div>
+      </div>
+    </div>
+
+    
+        
+
+            <div class="stage">
+      <div class="stage-num gold">5</div>
+      <div class="stage-body">
+        <div class="stage-label gold">32–55 min — Valor, Bônus e Oferta</div>
+        <div class="stage-title">Págs. 41 → 42 → 34–39 → 45 → 46 → 50 → 57</div>
+        <div class="pages-list">
+          <div class="page-chip star">Pág. <span class="pn">41</span> — Valor x Preço</div>
+          <div class="page-chip star">Pág. <span class="pn">42</span> — Benchmark do Produto</div>
+          <div class="page-chip star">Págs. <span class="pn">34–39</span> — Todos os Bônus</div>
+          <div class="page-chip star">Pág. <span class="pn">45</span> — Preço Padrão</div>
+          <div class="page-chip star">Pág. <span class="pn">46</span> — Valor Aluno Decisivo (capa)</div>
+          <div class="page-chip star">Pág. <span class="pn">50</span> — Valor Aluno Decisivo: 12x500 / R$5mil</div>
+          <div class="page-chip star">Pág. <span class="pn">57</span> — Garantia</div>
+        </div>
+        <div class="stage-tip">
+          <strong>Transição falada antes de abrir qualquer slide:</strong> <em>"[Nome], antes de te mostrar o investimento, deixa eu te mostrar tudo o que você está recebendo — porque eu quero que você compare valor com valor, não valor com preço."</em>
+        </div>
+        <div class="stage-tip" style="margin-top:8px;">
+          <strong>Sequência de apresentação:</strong> Pág. 41 (ancora valor x preço) → Pág. 42 (benchmark do produto) → Justificativa dos bônus → Págs. 34 a 39 (apresenta cada bônus) → Pág. 45 (revela preço padrão) → Pág. 46 (capa Valor Aluno Decisivo) → Pág. 50 (revela 12x500 / R$5mil) → Pág. 57 (garantia) → Fecha.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge situacao">Contexto</span>
+            <span class="nepq-title">Justificativa dos Bônus — págs. 34 a 39</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q situacao"><span class="nepq-q-num">&#9733;</span><span><em>"[Nome], antes de te mostrar os bônus, deixa eu te explicar por que eles existem. Esses bônus não são oferecidos para todo mundo — são exclusivos para quem entra agora, nesse grupo inicial de alunos. O motivo é simples: quanto mais aprovações a gente gerar nesse primeiro ciclo, mais forte fica o método. Então a gente tem interesse direto no seu resultado. Por isso estamos colocando tudo isso junto — para garantir que você chegue lá."</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ Diga isso ANTES de abrir a pág. 34. Essa justificativa transforma os bônus em exclusividade — não em desconto. Cria urgência natural: quem entra agora tem o que quem entrar depois não terá.</div>
+        </div>
+        <div class="stage-tip green" style="margin-top:8px;">
+          <strong>Última oferta — se houver hesitação após a garantia:</strong> <em>"[Nome], só para garantir que você está tomando a melhor decisão — o que eu posso fazer é te mostrar uma condição especial que a gente reserva para quem decide na call. Você quer ver?"</em> → Pág. 46 como surpresa antes de fechar.
+        </div>
+        <div class="nepq-block">
+          <div class="nepq-header">
+            <span class="nepq-badge compromisso">COMPROMISSO</span>
+            <span class="nepq-title">NEPQ — Fechamento: Espelho + Confirmação + Caminho</span>
+          </div>
+          <div class="nepq-questions">
+            <div class="nepq-q compromisso"><span class="nepq-q-num">Q1</span><span><em>"[Nome], lembra quando você me disse que [repita algo que o lead falou no rapport ou na fase de dor]? Com base em tudo que você viu hoje, você sente que esse é o caminho pra resolver isso?"</em></span></div>
+            <div class="nepq-q compromisso"><span class="nepq-q-num">Q2</span><span><em>"O que você está sentindo agora sobre tudo isso — você sente que faz sentido pra sua situação?"</em></span></div>
+            <div class="nepq-q compromisso"><span class="nepq-q-num">Q3</span><span><em>"Tem alguma coisa que ainda não ficou clara pra você antes de a gente definir o próximo passo?"</em></span></div>
+          </div>
+          <div class="nepq-note">⟶ A Q1 usa as palavras do próprio lead — o fechamento mais poderoso do NEPQ. A Q2 confirma o estado interno dele. A Q3 abre objeções escondidas ou confirma que não há mais resistência. Só depois das três pergunte: "Então vamos definir — você prefere começar pelo à vista ou parcelado?"</div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<!-- ======= ABA: OBJEÇÕES ======= -->
+<div id="tab-objecoes" class="tab-panel">
+
+  <p class="section-title">OBJEÇÕES MAIS COMUNS</p>
+  <p class="section-desc">Respostas prontas baseadas nos argumentos do próprio PDF.</p>
+
+  <div class="alert">
+    <strong>Regra de ouro:</strong> nunca refute uma objeção diretamente. Primeiro valide ("faz sentido você pensar assim"), depois redirecione com uma pergunta ou com evidência do material.
+  </div>
+
+  <div class="objection-list">
+
+    <div class="obj-item">
+      <div class="obj-q">É caro, não tenho esse dinheiro agora.</div>
+      <div class="obj-a">
+        <em>"Entendo. Mas me deixa te perguntar uma coisa: quanto você já gastou com cursos, anuidades, materiais — e ainda não passou? O problema não é quanto custa essa mentoria. É quanto está custando cada ano sem passar."</em><br><br>
+        Abra a pág. 10 e aponte: <strong>"Gastar mais dinheiro pagando anuidades"</strong> e <strong>"Desperdiçar anos da sua vida estudando da forma errada"</strong> — esses custos já estão acontecendo.<br><br>
+        Depois: <em>"12x de R$500 — é menos do que a maioria dos cursos preparatórios cobra por mês, sem o acompanhamento que a mentoria oferece."</em>
+      </div>
+    </div>
+
+    <div class="obj-item">
+      <div class="obj-q">Preciso pensar / falar com meu cônjuge / deixa eu ver.</div>
+      <div class="obj-a">
+        <em>"Claro, faz sentido. Me conta: qual é a sua maior dúvida nesse momento? É sobre o valor, sobre o método, ou sobre se funciona pra você especificamente?"</em><br><br>
+        Identifique a objeção real por trás do "preciso pensar". Depois use a pág. 57: <strong>"Se você entrar, aplicar e não tiver resultado, você recebe o dinheiro de volta no Pix. O risco financeiro é 100% nosso."</strong>
+      </div>
+    </div>
+
+    <div class="obj-item">
+      <div class="obj-q">Já fiz muitos cursos e não adiantou. Por que esse seria diferente?</div>
+      <div class="obj-a">
+        <em>"Exatamente essa pergunta mostra que você já entendeu algo importante: não é curso que falta. É método, diagnóstico e acompanhamento."</em><br><br>
+        Abra a pág. 21: <strong>"Isso aqui não é um curso. É um sistema de aprovação com acompanhamento — como se alguém estivesse decidindo com você."</strong> Leia em voz alta e deixe pesar.
+      </div>
+    </div>
+
+    <div class="obj-item">
+      <div class="obj-q">Não tenho tempo para mais uma coisa na minha rotina.</div>
+      <div class="obj-a">
+        Abra a pág. 25 (Cronograma Adaptativo): <em>"É exatamente por isso que existe o Cronograma Vivo Anti-Burnout. Ele não é um plano ideal — é um plano real, feito pra funcionar com a sua vida como ela é. Não com a vida que você gostaria de ter."</em>
+      </div>
+    </div>
+
+    <div class="obj-item">
+      <div class="obj-q">Qual a diferença desse preço especial? Sempre tem promoção.</div>
+      <div class="obj-a">
+        <em>"O preço padrão da mentoria é R$8.000 à vista — você viu na pág. 45. O que estou te oferecendo agora — R$5.000 à vista ou 12x R$500 — é o Valor Aluno Decisivo, que existe porque a decisão acontece na call, sem custo comercial adicional. Esse valor não fica disponível depois da reunião."</em>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="div">
+
+  <p class="section-title">SEQUÊNCIA EXATA DE FECHAMENTO</p>
+  <p class="section-desc">Use quando o lead está quase no sim mas ainda hesita.</p>
+
+  <div class="price-box">
+    <div class="price-row"><span class="label">Valor total declarado (pág. 42)</span><span class="val">R$ 29.600,00</span></div>
+    <div class="price-row"><span class="label">Preço padrão — pág. 45</span><span class="val">R$ 8.000 à vista / 8x R$1.107</span></div>
+    <div class="price-row"><span class="label">Valor Aluno Decisivo — pág. 50</span><span class="val">R$ 5.000 à vista / 12x R$500</span></div>
+    <div class="price-row"><span class="label">Garantia — pág. 57</span><span class="val">Dinheiro de volta no Pix</span></div>
+    <div class="price-total">
+      <span class="tlabel">Oferta da Call</span>
+      <span class="tval">12x R$500</span>
+    </div>
+  </div>
+
+  <div class="tip-block">
+    <strong>Sequência final:</strong> Pág. 42 (empilha R$29.600) → Pág. 43 (pergunta os 50%) → Pág. 44 (seria aluno?) → Pág. 45 (revela preço padrão) → Pág. 50 (revela valor decisivo) → Pág. 57 (garante) → Fecha: <em>"Você quer começar pelo boleto ou pelo cartão?"</em>
+  </div>
+
+</div>
+
+</div><!-- /content -->
+
+<script>
+(function() {
+  function init() {
+    var btns = document.querySelectorAll('.tab-btn');
+    btns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-tab');
+        btns.forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+        var panel = document.getElementById('tab-' + id);
+        if (panel) { panel.classList.add('active'); }
+        btn.classList.add('active');
+      });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
